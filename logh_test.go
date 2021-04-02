@@ -30,7 +30,6 @@ var (
 
 func init() {
 	t := testing.T{}
-	testLog = t.TempDir()
 	testLog = filepath.Join(t.TempDir(), "log.txt")
 }
 
@@ -81,10 +80,10 @@ func TestLineNumbers(t *testing.T) {
 	Map[loggerName].Println(0, "this is the Println call")
 	// Shutdown to flush output.
 	Map[loggerName].Shutdown()
-	logString, _ := readTestLog(0)
+	logString, _ := readTestLog(testLog, 0)
 	fmt.Println(logString)
-	if !strings.Contains(logString, "logh_test.go:80: this is the Printf call") ||
-		!strings.Contains(logString, "logh_test.go:81: this is the Println call") {
+	if !strings.Contains(logString, "logh_test.go:79: this is the Printf call") ||
+		!strings.Contains(logString, "logh_test.go:80: this is the Println call") {
 		t.Errorf("Output calldepth problem")
 	}
 }
@@ -101,9 +100,9 @@ func TestRotate(t *testing.T) {
 	fmt.Printf("\n\nsubtest: %d, Partially write log .0\n", subTest)
 	out = fmt.Sprintf("%d-12345678901234567890123456789012345678901234567890", subTest)
 	Map[loggerName].Println(0, out)
-	log0String, _ := readTestLog(0)
+	log0String, _ := readTestLog(testLog, 0)
 	fmt.Printf("log0\n%s\n", log0String)
-	log1String, _ := readTestLog(1)
+	log1String, _ := readTestLog(testLog, 1)
 	fmt.Printf("log1\n%s\n", log1String)
 	log0ShouldContain = []int{subTest}
 	log1ShouldContain = []int{}
@@ -116,9 +115,9 @@ func TestRotate(t *testing.T) {
 	fmt.Printf("\n\nsubtest: %d, Fill log .0\n", subTest)
 	out = fmt.Sprintf("%d-12345678901234567890123456789012345678901234567890", subTest)
 	Map[loggerName].Println(0, out)
-	log0String, _ = readTestLog(0)
+	log0String, _ = readTestLog(testLog, 0)
 	fmt.Printf("log0\n%s\n", log0String)
-	log1String, _ = readTestLog(1)
+	log1String, _ = readTestLog(testLog, 1)
 	fmt.Printf("log1\n%s\n", log1String)
 	log0ShouldContain = append(log0ShouldContain, subTest)
 	if len(log0String) == 0 || len(log1String) > 0 {
@@ -130,9 +129,9 @@ func TestRotate(t *testing.T) {
 	fmt.Printf("\n\nsubtest: %d, Partially write log .1\n", subTest)
 	out = fmt.Sprintf("%d-12345678901234567890123456789012345678901234567890", subTest)
 	Map[loggerName].Println(0, out)
-	log0String, _ = readTestLog(0)
+	log0String, _ = readTestLog(testLog, 0)
 	fmt.Printf("log0\n%s\n", log0String)
-	log1String, _ = readTestLog(1)
+	log1String, _ = readTestLog(testLog, 1)
 	fmt.Printf("log1\n%s\n", log1String)
 	log1ShouldContain = append(log1ShouldContain, subTest)
 	if len(log0String) == 0 || len(log1String) == 0 {
@@ -144,9 +143,9 @@ func TestRotate(t *testing.T) {
 	fmt.Printf("\n\nsubtest: %d, Fill log .1; log .0 will now be opened/cleared as it was rotated in.\n", subTest)
 	out = fmt.Sprintf("%d-12345678901234567890123456789012345678901234567890", subTest)
 	Map[loggerName].Println(0, out)
-	log0String, _ = readTestLog(0)
+	log0String, _ = readTestLog(testLog, 0)
 	fmt.Printf("log0\n%s\n", log0String)
-	log1String, _ = readTestLog(1)
+	log1String, _ = readTestLog(testLog, 1)
 	fmt.Printf("log1\n%s\n", log1String)
 	log0ShouldContain = []int{}
 	log1ShouldContain = append(log1ShouldContain, subTest)
@@ -159,9 +158,9 @@ func TestRotate(t *testing.T) {
 	fmt.Printf("\n\nsubtest: %d, Partially write log .0.\n", subTest)
 	out = fmt.Sprintf("%d-12345678901234567890123456789012345678901234567890", subTest)
 	Map[loggerName].Println(0, out)
-	log0String, _ = readTestLog(0)
+	log0String, _ = readTestLog(testLog, 0)
 	fmt.Printf("log0\n%s\n", log0String)
-	log1String, _ = readTestLog(1)
+	log1String, _ = readTestLog(testLog, 1)
 	fmt.Printf("log1\n%s\n", log1String)
 	log0ShouldContain = append(log0ShouldContain, subTest)
 	if len(log0String) == 0 || len(log1String) == 0 {
@@ -191,26 +190,28 @@ func TestShowOutput(t *testing.T) {
 		t.Errorf("error with New, error: %v", err)
 	}
 
-	Map[aLog].Println(Debug, "This is a debug level print; debug level logging.")
-	Map[aLog].Println(Info, "This is a info level print; debug level logging.")
-	Map[aLog].Println(Warning, "This is a warning level print; debug level logging.")
-	Map[aLog].Println(Audit, "This is a audit level print; debug level logging.")
-	Map[aLog].Println(Error, "This is a error level print; debug level logging.")
+	// Define an alias to use to keep print statements short.
+	lp := Map[aLog].Println
+	lp(Debug, "This is a debug level print; debug level logging.")
+	lp(Info, "This is a info level print; debug level logging.")
+	lp(Warning, "This is a warning level print; debug level logging.")
+	lp(Audit, "This is a audit level print; debug level logging.")
+	lp(Error, "This is a error level print; debug level logging.")
 
 	// Change to warning level logging
 	err = New(aLog, "", DefaultLevels, Warning, DefaultFlags, checkLogSize, maxLogSize)
 	if err != nil {
 		t.Errorf("error with New, error: %v", err)
 	}
-	Map[aLog].Println(Debug, "This is a debug level print, but will not output with warning level logging.")
-	Map[aLog].Println(Warning, "Warning and higher do print")
+	lp(Debug, "This is a debug level print, but will not output with warning level logging.")
+	lp(Warning, "Warning and higher do print")
 
 	// Change back to debug level  logging
 	err = New(aLog, "", DefaultLevels, Debug, DefaultFlags, checkLogSize, maxLogSize)
 	if err != nil {
 		t.Errorf("error with New, error: %v", err)
 	}
-	Map[aLog].Println(Debug, "And this debug print is now output.")
+	lp(Debug, "And this debug print is now output.")
 
 	buf := make([]byte, 1000)
 	n, err := rf.Read(buf)
@@ -237,7 +238,7 @@ func TestLevels(t *testing.T) {
 			v.Println(t)
 		}
 
-		logString, err := readTestLog(0)
+		logString, err := readTestLog(testLog, 0)
 		fmt.Printf("\nTestLevels lvl:%d\n%s", lvl, logString)
 		if err != nil {
 			t.Errorf("Error reading log file, error: %+v", err)
@@ -325,17 +326,61 @@ func TestLevels(t *testing.T) {
 	Map[loggerName].Shutdown()
 }
 
-func readTestLog(rotation int) (string, error) {
-	b, err := ioutil.ReadFile(testLog + "." + strconv.Itoa(rotation))
+// Test2Logs tests writing to 2 independent logs
+func Test2Logs(t *testing.T) {
+	testLog1 := filepath.Join(t.TempDir(), "log1.txt")
+	testLog2 := filepath.Join(t.TempDir(), "log2.txt")
+
+	err := New("testLog1", testLog1, DefaultLevels, Debug, DefaultFlags, 10, 10000)
+	if err != nil {
+		removeLogs(testLog1, t)
+		t.Errorf("error with New, error: %v", err)
+	}
+	err = New("testLog2", testLog2, DefaultLevels, Debug, DefaultFlags, 10, 10000)
+	if err != nil {
+		removeLogs(testLog1, t)
+		removeLogs(testLog2, t)
+		t.Errorf("error with New, error: %v", err)
+	}
+
+	Map["testLog1"].Println(Debug, "log1")
+	Map["testLog2"].Println(Debug, "log2")
+
+	l1, err := readTestLog(testLog1, 0)
+	fmt.Printf("log1:%s", l1)
+	if err != nil {
+		removeLogs(testLog1, t)
+		removeLogs(testLog2, t)
+		t.Errorf("error reading, error: %v", err)
+	}
+	l2, err := readTestLog(testLog2, 0)
+	fmt.Printf("log2:%s", l2)
+	if err != nil {
+		removeLogs(testLog1, t)
+		removeLogs(testLog2, t)
+		t.Errorf("error reading, error: %v", err)
+	}
+
+	if !(strings.Contains(l1, "log1") && strings.Contains(l2, "log2")) {
+		t.Errorf("independent logs not working, l1:%s, l2:%s", l1, l2)
+		return
+	}
+
+	removeLogs(testLog1, t)
+	removeLogs(testLog2, t)
+}
+
+func readTestLog(filepath string, rotation int) (string, error) {
+	b, err := ioutil.ReadFile(filepath + "." + strconv.Itoa(rotation))
 	if err != nil {
 		return "", err
 	}
 	return string(b), nil
 }
 
-func removeLogs(t *testing.T) {
+func removeLogs(filepath string, t *testing.T) {
 	for i := 0; i < maxRotations; i++ {
-		err := os.Remove(testLog + "." + strconv.Itoa(i))
+		err := os.Remove(filepath + "." + strconv.Itoa(i))
 		if err != nil && !os.IsNotExist(err) {
 			t.Errorf("error removing log file, error: %+v", err)
 		}
@@ -361,5 +406,5 @@ func shouldContainCheck(t *testing.T, log0String string, log1String string,
 }
 
 func testSetup(t *testing.T) {
-	removeLogs(t)
+	removeLogs(testLog, t)
 }

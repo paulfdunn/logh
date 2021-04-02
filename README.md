@@ -18,19 +18,21 @@ if err != nil {
     t.Errorf("error with New, error: %v", err)
 }
 
-Map[aLog].Println(Debug, "This is a debug level print; debug level logging.")
-Map[aLog].Println(Info, "This is a info level print; debug level logging.")
-Map[aLog].Println(Warning, "This is a warning level print; debug level logging.")
-Map[aLog].Println(Audit, "This is a audit level print; debug level logging.")
-Map[aLog].Println(Error, "This is a error level print; debug level logging.")
+// Define an alias to use to keep print statements short.
+lp := Map[aLog].Println
+lp(Debug, "This is a debug level print; debug level logging.")
+lp(Info, "This is a info level print; debug level logging.")
+lp(Warning, "This is a warning level print; debug level logging.")
+lp(Audit, "This is a audit level print; debug level logging.")
+lp(Error, "This is a error level print; debug level logging.")
 
 // Change to warning level logging
 err = New(aLog, "", DefaultLevels, Warning, DefaultFlags, checkLogSize, maxLogSize)
 if err != nil {
     t.Errorf("error with New, error: %v", err)
 }
-Map[aLog].Println(Debug, "This is a debug level print, but will not output with warning level logging.")
-Map[aLog].Println(Warning, "Warning and higher do print")
+lp(Debug, "This is a debug level print, but will not output with warning level logging.")
+lp(Warning, "Warning and higher do print")
 ```
 
 Example output:
