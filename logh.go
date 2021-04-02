@@ -53,7 +53,7 @@ var (
 	DefaultLevels = []string{"debug", "info", "warning", "audit", "error"}
 
 	// Map holds key/value pairs of named Loggers, created with New.
-	Map map[string]*Logger
+	Map = map[string]*Logger{}
 
 	defaultOutput = os.Stdout
 )
@@ -110,7 +110,6 @@ func New(name string, filePath string, levels []string, level LoghLevel, flags i
 		}
 	}
 
-	Map = make(map[string]*Logger)
 	Map[name] = logger
 	return nil
 }
