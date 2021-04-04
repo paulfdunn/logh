@@ -53,12 +53,16 @@ var (
 	DefaultLevels = []string{"debug", "info", "warning", "audit", "error"}
 
 	// Map holds key/value pairs of named Loggers, created with New.
+	// This pattern has the advantage, compared to just returning the logger from New,
+	// of allowing a main function to configure loggers, and libraries or other functions
+	// can just try to logger to a specific named logger, without concern for log size or if
+	// the named logger even exists.
 	Map = map[string]*Logger{}
 
 	defaultOutput = os.Stdout
 )
 
-// New creates a new logger. This logger supports rotation of 2 files; suffix
+// New adds a new logger. This logger supports rotation of 2 files; suffix
 // .0 and suffix .1.
 // 	 name - is the name of this logger, accessed as logh.Map[name]
 // 	 filePath - fully qualified file path to which to log.
@@ -73,7 +77,10 @@ var (
 func New(name string, filePath string, levels []string, level LoghLevel, flags int,
 	checkLogSize int, maxLogSize int64) error {
 
-	// Allow calling with an existing name in order to let callers change level
+	// Shutdown and delete any existing loggers at this name.
+	if _, ok := Map[name]; ok {
+		Map[name].Shutdown()
+	}
 	delete(Map, name)
 
 	lg := Logger{
@@ -98,7 +105,7 @@ func New(name string, filePath string, levels []string, level LoghLevel, flags i
 		return err
 	}
 
-	if err := logger.openFile(); err != nil {
+	if err := logger.openFileAndInitialize(); err != nil {
 		return err
 	}
 
@@ -129,8 +136,10 @@ func (l *Logger) Shutdown() error {
 	for i := range l.loggers {
 		l.loggers[i] = nil
 	}
-	if err := l.file.Close(); err != nil {
-		return fmt.Errorf("closing log file, error:%v", err)
+	if l.file != nil {
+		if err := l.file.Close(); err != nil {
+			return fmt.Errorf("closing log file, error:%v", err)
+		}
 	}
 	return nil
 }
@@ -155,7 +164,7 @@ func (l *Logger) checkSizeAndRotate() error {
 		if err := os.Remove(l.filePath + "." + strconv.Itoa(l.rotation)); err != nil && !os.IsNotExist(err) {
 			return err
 		}
-		if err := l.openFile(); err != nil {
+		if err := l.openFileAndInitialize(); err != nil {
 			return err
 		}
 	}
@@ -192,10 +201,10 @@ func (l *Logger) initializeRotation() error {
 	return os.Remove(l.filePath + ".0")
 }
 
-// openFile opens the file and assigns loggers. On error, which can happen
+// openFileAndInitialize opens the file and assigns loggers. On error, which can happen
 // at startup or during file rotations, errors will result in the defaultOutput being
 // used for logging.
-func (l *Logger) openFile() error {
+func (l *Logger) openFileAndInitialize() error {
 	var err, errors error
 	l.writesSinceCheckRotate = 0
 	if l.filePath == "" {

@@ -28,6 +28,8 @@ lp(Error, "This is a error level print; debug level logging.")
 
 // Change to warning level logging
 err = New(aLog, "", DefaultLevels, Warning, DefaultFlags, checkLogSize, maxLogSize)
+// Re-define alias with New log.
+lp = Map[aLog].Println
 if err != nil {
     t.Errorf("error with New, error: %v", err)
 }
