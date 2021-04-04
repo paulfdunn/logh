@@ -223,7 +223,8 @@ func TestShowOutput(t *testing.T) {
 	out := string(buf[0:n])
 	fmt.Printf("%s", out)
 
-	Map[aLog].Shutdown()
+	// Map[aLog].Shutdown()
+	ShutdownAll()
 }
 
 // TestLevels tests that the proper number of lines are included in output for the specified

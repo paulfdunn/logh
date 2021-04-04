@@ -144,6 +144,19 @@ func (l *Logger) Shutdown() error {
 	return nil
 }
 
+// ShutdownAll is a convenience function to shutdown all running loggers and clear Map.
+func ShutdownAll() error {
+	var errOut error
+	for k := range Map {
+		err := Map[k].Shutdown()
+		if err != nil {
+			errOut = fmt.Errorf("error: %v, prior errors: %v", err, errOut)
+		}
+	}
+	Map = map[string]*Logger{}
+	return errOut
+}
+
 func (l *Logger) checkSizeAndRotate() error {
 	if l.filePath == "" {
 		return nil
