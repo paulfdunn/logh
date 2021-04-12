@@ -200,6 +200,7 @@ func TestShowOutput(t *testing.T) {
 
 	// Change to warning level logging
 	err = New(aLog, "", DefaultLevels, Warning, DefaultFlags, checkLogSize, maxLogSize)
+	defer ShutdownAll()
 	// Re-define alias with New log.
 	lp = Map[aLog].Println
 	if err != nil {
@@ -222,9 +223,6 @@ func TestShowOutput(t *testing.T) {
 	}
 	out := string(buf[0:n])
 	fmt.Printf("%s", out)
-
-	// Map[aLog].Shutdown()
-	ShutdownAll()
 }
 
 // TestLevels tests that the proper number of lines are included in output for the specified

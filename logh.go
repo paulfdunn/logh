@@ -144,7 +144,7 @@ func (l *Logger) Shutdown() error {
 	return nil
 }
 
-// ShutdownAll is a convenience function to shutdown all running loggers and clear Map.
+// ShutdownAll is a convenience function to shutdown all running loggers and clear the Map.
 func ShutdownAll() error {
 	var errOut error
 	for k := range Map {

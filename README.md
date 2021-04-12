@@ -14,6 +14,7 @@ aLog := "app"
 checkLogSize := 10 // every 10 entries, check log size and rotate if size exceeds maxLogSize.
 maxLogSize := int64(10000)
 err = New(aLog, "", DefaultLevels, Debug, DefaultFlags, checkLogSize, maxLogSize)
+defer ShutdownAll()
 if err != nil {
     t.Errorf("error with New, error: %v", err)
 }
