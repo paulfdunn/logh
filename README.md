@@ -1,7 +1,8 @@
 # logh
-logh is a GO package for leveled logging. 
+logh is a GO (GOLANG) package for leveled logging, for multiple simultaneous logs, with log rotation.
 Key features:
 * Multiple simultaneous log files, each with their own log level, are supported.
+* Log rotation is supported.
 * Default levels are provided, but the user can provide user defined levels on a per log basis.
 * Supports logging to a file, or STDOUT.
     * When logging to a file, 2 log rotations are managed, to the file size specified by the caller.
